@@ -30,7 +30,7 @@ forAll (averageU, faceI) // For U, it is actually a cell center value. (cellI)
 outputFile << runTime.timeName() << "sec_avgU";
 forAll (U_face, faceI)
 {
-    if (y_cf[faceI].y() <= 0.005)
+    if (y_cf[faceI].y()*maxUtau/nu_ <= 400)
     {        
         outputFile << ", " << averageU[faceI];
     }
@@ -41,7 +41,7 @@ outputFile << "\n";
 outputFile << runTime.timeName() << "sec_dUdy_wall";
 forAll (U_face, faceI)
 {
-    if (y_cf[faceI].y() <= 0.005)
+    if (y_cf[faceI].y()*maxUtau/nu_ <= 400)
     {        
         outputFile << ", " << mag(U_sngrad.boundaryField()[surfaceID][0]);
     }
@@ -52,7 +52,7 @@ outputFile << "\n";
 outputFile << runTime.timeName() << "sec_dUdy_face";
 forAll (U_face, faceI)
 {
-    if (y_cf[faceI].y() <= 0.005)
+    if (y_cf[faceI].y()*maxUtau/nu_ <= 400)
     {        
         outputFile << ", " << U_sngrad[faceI].x();
     }
@@ -63,7 +63,7 @@ outputFile << "\n";
 outputFile << runTime.timeName() << "sec_Ux_face";
 forAll (U_face, faceI)
 {
-    if (y_cf[faceI].y() <= 0.005)
+    if (y_cf[faceI].y()*maxUtau/nu_ <= 400)
     {        
         outputFile << ", " << U_face[faceI].x();
     }
