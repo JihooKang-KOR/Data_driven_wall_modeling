@@ -103,7 +103,7 @@ forAll(patchFaceIDs, faceI)
                 << nuEff.boundaryField()[surfaceID][faceI] << ", "
                 << nuEff[oppFaceIDs[faceI]] << ", "
                 << labelAccessor[faceI][0] << ", "
-                << labelAccessor[faceI][1] << ", "                
+                << labelAccessor[faceI][1] << ", "
                 << nuEff[oppFaceIDs[faceI]] - nu_ << ", "                
                 << magGradU[faceI] << ", "
                 << magGradUf[faceI] << ", "                
