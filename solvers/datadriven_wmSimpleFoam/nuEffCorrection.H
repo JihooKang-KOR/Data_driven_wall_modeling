@@ -92,7 +92,7 @@ path1 += path2;
 
 OFstream outputFile(path1/filename1);
 outputFile.precision(12);
-outputFile << "ccx,nuEff_wall_norm,nuEff_face_norm,nuEff_wall,nuEff_1st_face,wall_slope,face_slope,nut_face,magGradU_wall,magGradU_face,Ux_1st_cell,Uy_1st_cell,Ux_1st_face,Uy_1st_face,p_1st_cell,p_1st_face";
+outputFile << "ccx,nuEff_wall_norm,nuEff_face_norm,nuEff_wall,nuEff_1st_face,wall_slope,face_slope,nut_face,magGradU_wall,magGradU_face,Ux_1st_cell,Uy_1st_cell,Ux_1st_face,Uy_1st_face,p_1st_cell,p_1st_face,scaled_y_face,scaled_avgU";
 
 forAll(patchFaceIDs, faceI)
 {
@@ -112,7 +112,9 @@ forAll(patchFaceIDs, faceI)
                 << U_face[oppFaceIDs[faceI]][0] << ", "
                 << U_face[oppFaceIDs[faceI]][1] << ", "
                 << p[adjacentCellIDs[faceI]] << ", "
-                << p_face[oppFaceIDs[faceI]];
+                << p_face[oppFaceIDs[faceI]] << ", "
+                << scaleAccessor[faceI][0] << ", "
+                << scaleAccessor[faceI][1];
 }
 
 count++;
