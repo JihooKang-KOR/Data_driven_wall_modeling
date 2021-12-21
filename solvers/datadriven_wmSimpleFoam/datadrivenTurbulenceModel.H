@@ -27,7 +27,7 @@ forAll (oppFaceIDs, faceI)
         extraCount_y++;
     }
 
-    else if (scaleAccessor[faceI][1] > 1.05 || scaleAccessor[faceI][1] < -0.05)
+    if (scaleAccessor[faceI][1] > 1.05 || scaleAccessor[faceI][1] < -0.05)
     {
         extraCount_avgU++;
     }
