@@ -1,13 +1,6 @@
 // Employ a variable nu_ in order to use scalar instead of dimensionedScalar
 const scalar nu_ = nu.value();
 
-// nuEff_face_old
-scalarField nuEff_face_old(nuEff.boundaryField()[surfaceID].size());
-forAll (oppFaceIDs, faceI)
-{
-    nuEff_face_old[faceI] = nuEff[oppFaceIDs[faceI]];
-}
-
 // Interpolate face values for cell center velocities
 surfaceVectorField U_face = fvc::interpolate(U);
 surfaceVectorField U_sngrad = fvc::snGrad(U);
@@ -26,13 +19,6 @@ forAll (oppFaceIDs, faceI)
 {
     dist_fface[faceI] = mag(mesh.Cf()[oppFaceIDs[faceI]] 
                     - mesh.Cf().boundaryField()[surfaceID][faceI]);
-}
-    
-// Use the velocity information of the first cell center normal to the wall
-scalarField magUp(mag(U.boundaryField()[surfaceID]));
-forAll (adjacentCellIDs, faceI)
-{
-    magUp[faceI] = mag(U.internalField()[adjacentCellIDs[faceI]] - U.boundaryField()[surfaceID][faceI]);
 }
 
 // Include data-driven turbulence model
@@ -67,12 +53,27 @@ forAll (oppFaceIDs, faceI)
 }
     
 const scalarField magGradUf(tmp_magGradUf);
+if (count == 6)
+{
+    forAll (oppFaceIDs, faceI)
+    {
+        fixedGradUf.push_back(magGradUf[faceI]);
+    }    
+}
 
 // Correction of nuEff at the first cell face opposite to the wall
 forAll (patchFaceIDs, faceI)
-{    
+{
     // nut already exists at the face, whereas zero at the wall
-    nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(magGradUf[faceI] + ROOTVSMALL);    
+    if (count >= 6)
+    {
+        // Correction by the fixed velocity gradient value at the 1st face
+        nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(fixedGradUf[faceI] + ROOTVSMALL);
+    }
+    else
+    {
+        nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(magGradUf[faceI] + ROOTVSMALL);
+    }
 }
 
 
