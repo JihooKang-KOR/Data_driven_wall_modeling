@@ -5,7 +5,7 @@ torch::Tensor featureTensor = torch::ones({adjacentCellIDs.size(), nInputFeature
 forAll (oppFaceIDs, faceI)
 {    
     featureTensor[faceI][0] = dist_fface[faceI];
-    featureTensor[faceI][1] = mag(U.internalField()[adjacentCellIDs[faceI]]);    
+    featureTensor[faceI][1] = mag(U.internalField()[adjacentCellIDs[faceI]]);
 }
 
 // Mapping tensor

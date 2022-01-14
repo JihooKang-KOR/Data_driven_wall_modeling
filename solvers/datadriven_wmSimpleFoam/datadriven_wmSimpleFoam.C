@@ -99,9 +99,7 @@ int main(int argc, char *argv[])
     Info << "\nStarting time loop\n" << endl;
 
     // The number of iterations
-    int count = 1;
-    // Use fixed face velocity gradient at a certain time step
-    std::vector<scalar> fixedGradUf;
+    int count = 1;    
 
     while (simple.loop())
     {
