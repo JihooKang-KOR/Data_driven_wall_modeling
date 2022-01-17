@@ -2,7 +2,6 @@
 const scalar nu_ = nu.value();
 
 // Interpolate face values for cell center velocities
-surfaceVectorField U_face = fvc::interpolate(U);
 surfaceVectorField U_sngrad = fvc::snGrad(U);
 surfaceScalarField p_face = fvc::interpolate(p);
 
@@ -54,38 +53,32 @@ forAll (oppFaceIDs, faceI)
     
 const scalarField magGradUf(tmp_magGradUf);
 
-// Temporary nuEff for writing out to csv files
-scalarField nuEff_temp(mag(U_sngrad.boundaryField()[surfaceID]));
+// Check if the activation of the 1st face correction executes for each x-coordinate
+boolField actFaceCorr(mesh.Cf().boundaryField()[surfaceID].patch().size());
 
 // Correction of nuEff at the first cell face opposite to the wall
 forAll (oppFaceIDs, faceI)
 {
-    nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(magGradUf[faceI] + ROOTVSMALL);
-    // 1st correction method
-    nuEff[oppFaceIDs[faceI]] = max(nuEff[oppFaceIDs[faceI]], nu_);
-    nuEff_temp[faceI] = nuEff[oppFaceIDs[faceI]];
+    // 1st face correction only if the differences at the cell center and the face are negative
+    if (diffU_center[faceI] <= 0 && diffU_face[faceI] <= 0)
+    {
+        nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(magGradUf[faceI] + ROOTVSMALL);
+        actFaceCorr[faceI] = 1;
+    }
+    
+    // 1st face correction also if the differences at the cell center and the face are positive
+    else if (diffU_center[faceI] > 0 && diffU_face[faceI] > 0)
+    {
+        nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(magGradUf[faceI] + ROOTVSMALL);
+        actFaceCorr[faceI] = 1;
+    }
+    
+    else
+    {
+        actFaceCorr[faceI] = 0;
+    }
 }
 
-// Initialize nuEff variables for 1st and 2nd cell centers
-scalarField nuEff_1(mag(U_sngrad.boundaryField()[surfaceID]));
-scalarField nuEff_2(mag(U_sngrad.boundaryField()[surfaceID]));
-
-scalarField& nuEff_cell = turbulence->nuEff().ref();
-
-// Save actual nuEff at the 1st and 2nd cell centers to nuEff variables
-forAll (adjacentCellIDs, cellI)
-{
-    nuEff_1[cellI] = nuEff_cell[adjacentCellIDs[cellI]];
-    nuEff_2[cellI] = nuEff_cell[secAdjacentCellIDs[cellI]];
-}
-
-scalarField nuEff_max = max(nuEff_1, nuEff_2);
-scalarField nuEff_min = min(nuEff_1, nuEff_2);
-forAll (oppFaceIDs, faceI)
-{
-    // 2nd correction method
-    nuEff[oppFaceIDs[faceI]] = min(max(nuEff_min[faceI], nuEff[oppFaceIDs[faceI]]), nuEff_max[faceI]);
-}
 
 // write surface data to file
 const vectorField Cf(mesh.Cf().boundaryField()[surfaceID]);
@@ -103,27 +96,22 @@ path1 += path2;
 
 OFstream outputFile(path1/filename1);
 outputFile.precision(12);
-outputFile << "ccx,nuEff_wall_norm,nuEff_1cell_norm,nuEff_face_norm,nuEff_2cell_norm,nuEff_final_norm,nuEff_wall,nuEff_1cell,nuEff_1st_face,nuEff_2cell,nuEff_final,wall_slope,face_slope,nut_face,magGradU_wall,magGradU_face,Ux_1st_cell,Uy_1st_cell,Ux_1st_face,Uy_1st_face,p_1st_cell,p_1st_face,scaled_y_face,scaled_avgU";
+outputFile << "ccx,nuEff_wall_norm,nuEff_face_norm,nuEff_wall,nuEff_1st_face,wall_slope,face_slope,nut_face,magGradU_wall,magGradU_face,actFaceCorr,Ux_1st_cell,Uy_1st_cell,Ux_1st_face,Uy_1st_face,p_1st_cell,p_1st_face,scaled_y_face,scaled_avgU";
 
-forAll(patchFaceIDs, faceI)
+forAll (patchFaceIDs, faceI)
 {
     outputFile << "\n";        
     outputFile << Cf[faceI].x() << ", "
                 << nuEff.boundaryField()[surfaceID][faceI]/nu_ << ", "
-                << nuEff_1[faceI]/nu_ << ", "
-                << nuEff_temp[faceI]/nu_ << ", "
-                << nuEff_2[faceI]/nu_ << ", "
                 << nuEff[oppFaceIDs[faceI]]/nu_ << ", "
                 << nuEff.boundaryField()[surfaceID][faceI] << ", "
-                << nuEff_1[faceI] << ", "
-                << nuEff_temp[faceI] << ", "
-                << nuEff_2[faceI] << ", "
-                << nuEff[oppFaceIDs[faceI]]/nu_ << ", "
+                << nuEff[oppFaceIDs[faceI]] << ", "
                 << labelAccessor[faceI][0] << ", "
-                << labelAccessor[faceI][1] << ", "                
+                << labelAccessor[faceI][1] << ", "
                 << nuEff[oppFaceIDs[faceI]] - nu_ << ", "                
                 << magGradU[faceI] << ", "
-                << magGradUf[faceI] << ", "                
+                << magGradUf[faceI] << ", "
+                << actFaceCorr[faceI] << ", "
                 << U[adjacentCellIDs[faceI]][0] << ", "
                 << U[adjacentCellIDs[faceI]][1] << ", "
                 << U_face[oppFaceIDs[faceI]][0] << ", "
