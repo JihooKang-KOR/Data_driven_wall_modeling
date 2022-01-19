@@ -2,6 +2,7 @@
 const scalar nu_ = nu.value();
 
 // Interpolate face values for cell center velocities
+surfaceVectorField U_face = fvc::interpolate(U);
 surfaceVectorField U_sngrad = fvc::snGrad(U);
 surfaceScalarField p_face = fvc::interpolate(p);
 
@@ -59,20 +60,13 @@ boolField actFaceCorr(mesh.Cf().boundaryField()[surfaceID].patch().size());
 // Correction of nuEff at the first cell face opposite to the wall
 forAll (oppFaceIDs, faceI)
 {
-    // 1st face correction only if the differences at the cell center and the face are negative
-    if (diffU_center[faceI] <= 0 && diffU_face[faceI] <= 0)
+    // 1st face correction if the sign of the velocity differences at three locations are the same
+    if ((mag(U_face.boundaryField()[surfaceID][faceI]) - mag(U[adjacentCellIDs[faceI]]))*(mag(U[adjacentCellIDs[faceI]]) - mag(U[secAdjacentCellIDs[faceI]])) > 0)    
     {
         nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(magGradUf[faceI] + ROOTVSMALL);
         actFaceCorr[faceI] = 1;
     }
-    
-    // 1st face correction also if the differences at the cell center and the face are positive
-    else if (diffU_center[faceI] > 0 && diffU_face[faceI] > 0)
-    {
-        nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(magGradUf[faceI] + ROOTVSMALL);
-        actFaceCorr[faceI] = 1;
-    }
-    
+
     else
     {
         actFaceCorr[faceI] = 0;

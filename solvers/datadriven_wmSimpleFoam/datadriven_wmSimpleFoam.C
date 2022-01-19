@@ -100,20 +100,11 @@ int main(int argc, char *argv[])
 
     // The number of iterations
     int count = 1;
-    
-    // Initialization of velocities and difference of the velocities
-    surfaceVectorField U_face_next = fvc::interpolate(U);
-    volVectorField U_next = U;
-    scalarField diffU_center(mag(mesh.Cf().boundaryField()[surfaceID]));
-    scalarField diffU_face(mag(mesh.Cf().boundaryField()[surfaceID]));
 
     while (simple.loop())
     {
         Info << "Time = " << runTime.timeName() << nl << endl;  
-        // Velocities at the current time step
-        surfaceVectorField U_face = fvc::interpolate(U);
-        volVectorField U_current = U;
-
+        
         // --- Pressure-velocity SIMPLE corrector
         {
             #include "UEqn.H"
@@ -126,20 +117,6 @@ int main(int argc, char *argv[])
         runTime.write();
 
         runTime.printExecutionTime(Info);
-
-        // Velocities at the next time step
-        U_face_next = fvc::interpolate(U);
-        U_next = U;
-
-        // Difference of the velocities between the current and the next time steps
-        forAll (adjacentCellIDs, cellI)
-        {
-            diffU_center[cellI] = U_next[adjacentCellIDs[cellI]].x() - U_current[adjacentCellIDs[cellI]].x();
-        }
-        forAll (oppFaceIDs, faceI)
-        {
-            diffU_face[faceI] = U_face_next[oppFaceIDs[faceI]].x() - U_face[oppFaceIDs[faceI]].x();
-        }
     }
 
     Info << "End\n" << endl;
