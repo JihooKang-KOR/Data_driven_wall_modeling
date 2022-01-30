@@ -52,25 +52,41 @@ forAll (oppFaceIDs, faceI)
     }        
 }
     
-const scalarField magGradUf(tmp_magGradUf);
+scalarField magGradUf(tmp_magGradUf);
 
 // Check if the activation of the 1st face correction executes for each x-coordinate
 boolField actFaceCorr(mesh.Cf().boundaryField()[surfaceID].patch().size());
 
+// Save magGradUf at a certain time step as fixedNumSlope
+for (int i = 0; i < 10; i++)
+{
+    if (count == 30 + 50*i)    
+    {
+        if (fixedNumSlope.size() != 0)
+        {
+            std::vector<scalar>().swap(fixedNumSlope);
+        }
+        forAll (oppFaceIDs, faceI)
+        {
+            fixedNumSlope.push_back(magGradUf[faceI]);
+        }
+    }
+}
+
 // Correction of nuEff at the first cell face opposite to the wall
 forAll (oppFaceIDs, faceI)
 {
-    // 1st face correction if the sign of the velocity differences at three locations are the same
-    if ((mag(U_face.boundaryField()[surfaceID][faceI]) - mag(U[adjacentCellIDs[faceI]]))*(mag(U[adjacentCellIDs[faceI]]) - mag(U[secAdjacentCellIDs[faceI]])) > 0)    
+    if (count >= 31)
     {
-        nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(magGradUf[faceI] + ROOTVSMALL);
+        // Correction by the fixed velocity gradient value at the 1st face
+        nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(fixedNumSlope[faceI] + ROOTVSMALL);
         actFaceCorr[faceI] = 1;
     }
-
     else
     {
+        nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(magGradUf[faceI] + ROOTVSMALL);
         actFaceCorr[faceI] = 0;
-    }
+    }    
 }
 
 
@@ -90,7 +106,7 @@ path1 += path2;
 
 OFstream outputFile(path1/filename1);
 outputFile.precision(12);
-outputFile << "ccx,nuEff_wall_norm,nuEff_face_norm,nuEff_wall,nuEff_1st_face,wall_slope,face_slope,nut_face,magGradU_wall,magGradU_face,actFaceCorr,Ux_1st_cell,Uy_1st_cell,Ux_1st_face,Uy_1st_face,p_1st_cell,p_1st_face,scaled_y_face,scaled_avgU";
+outputFile << "ccx,nuEff_wall_norm,nuEff_face_norm,nuEff_wall,nuEff_1st_face,wall_slope,face_slope,nut_face,magGradU_wall,magGradU_face,fixedNumSlope,actFaceCorr,Ux_1st_cell,Uy_1st_cell,Ux_1st_face,Uy_1st_face,p_1st_cell,p_1st_face,scaled_y_face,scaled_avgU";
 
 forAll (patchFaceIDs, faceI)
 {
@@ -104,8 +120,16 @@ forAll (patchFaceIDs, faceI)
                 << labelAccessor[faceI][1] << ", "
                 << nuEff[oppFaceIDs[faceI]] - nu_ << ", "                
                 << magGradU[faceI] << ", "
-                << magGradUf[faceI] << ", "
-                << actFaceCorr[faceI] << ", "
+                << magGradUf[faceI] << ", ";
+    if (fixedNumSlope.size() != 0)
+    {
+        outputFile << fixedNumSlope[faceI] << ", ";
+    }
+    else
+    {
+        outputFile << magGradUf[faceI] << ", ";
+    }
+    outputFile << actFaceCorr[faceI] << ", "
                 << U[adjacentCellIDs[faceI]][0] << ", "
                 << U[adjacentCellIDs[faceI]][1] << ", "
                 << U_face[oppFaceIDs[faceI]][0] << ", "
