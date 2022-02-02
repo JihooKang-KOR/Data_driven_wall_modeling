@@ -62,5 +62,23 @@ forAll (oppFaceIDs, faceI)
         );
 }
 
+// Get IDs of third adjacent cells
+labelList thirdAdjacentCellIDs(adjacentCellIDs.size());
+
+label globFaceThird = -1;
+forAll (secOppFaceIDs, faceI)
+{
+    globFaceThird = secOppFaceIDs[faceI];
+    
+    if (mesh.owner()[globFaceThird] == secAdjacentCellIDs[faceI])
+    {
+        thirdAdjacentCellIDs[faceI] = mesh.neighbour()[globFaceThird];
+    }
+    else
+    {
+        thirdAdjacentCellIDs[faceI] = mesh.owner()[globFaceThird];
+    }
+}
+
 // area of boundary faces
 const scalarField magSf(mag(mesh.Sf().boundaryField()[surfaceID]));

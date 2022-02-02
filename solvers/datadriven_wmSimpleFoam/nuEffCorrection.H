@@ -76,17 +76,31 @@ for (int i = 0; i < 10; i++)
 // Correction of nuEff at the first cell face opposite to the wall
 forAll (oppFaceIDs, faceI)
 {
-    if (count >= 31)
+    scalar monoton = (mag(U[adjacentCellIDs[faceI]]) - mag(U[secAdjacentCellIDs[faceI]]))
+                    *(mag(U[secAdjacentCellIDs[faceI]]) - mag(U[thirdAdjacentCellIDs[faceI]]));
+    
+    if ((magGradUf[faceI] > SMALL) && (monoton > 0))
     {
-        // Correction by the fixed velocity gradient value at the 1st face
-        nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(fixedNumSlope[faceI] + ROOTVSMALL);
+        nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(magGradUf[faceI] + ROOTVSMALL);
         actFaceCorr[faceI] = 1;
     }
     else
     {
-        nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(magGradUf[faceI] + ROOTVSMALL);
         actFaceCorr[faceI] = 0;
-    }    
+    }
+
+    /*
+    if (count >= 31)
+    {
+        // Correction by the fixed velocity gradient value at the 1st face
+        //nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(fixedNumSlope[faceI] + ROOTVSMALL);
+        actFaceCorr[faceI] = 1;
+    }
+    else
+    {
+        //nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(magGradUf[faceI] + ROOTVSMALL);
+        actFaceCorr[faceI] = 0;
+    }*/
 }
 
 
