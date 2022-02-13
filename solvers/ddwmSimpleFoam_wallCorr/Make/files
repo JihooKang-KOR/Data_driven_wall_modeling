@@ -1,0 +1,3 @@
+ddwmSimpleFoam_wallCorr.C
+
+EXE = $(FOAM_USER_APPBIN)/ddwmSimpleFoam_wallCorr
