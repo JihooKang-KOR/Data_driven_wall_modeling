@@ -100,8 +100,8 @@ int main(int argc, char *argv[])
 
     // The number of iterations
     int count = 1;
-    // Use fixed face velocity gradient at a certain time step
-    std::vector<scalar> fixedNumSlope;
+    // Reference velocity (U_inlet)
+    const scalar U_ref = U.internalField()[0].x();
 
     while (simple.loop())
     {

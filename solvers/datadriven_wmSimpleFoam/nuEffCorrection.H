@@ -1,5 +1,9 @@
 // Employ a variable nu_ in order to use scalar instead of dimensionedScalar
 const scalar nu_ = nu.value();
+// Reference length
+const scalar l_ref = nu_/U_ref;
+// Velocity at wall
+scalarField U_wall(mag(U.boundaryField()[surfaceID]));
 
 // Interpolate face values for cell center velocities
 surfaceVectorField U_face = fvc::interpolate(U);
@@ -24,13 +28,32 @@ forAll (oppFaceIDs, faceI)
 // Include data-driven turbulence model
 #include "datadrivenTurbulenceModel.H"
 
-// Correction of nuEff at the wall
-scalarField& nuEff_wall = nuEff.boundaryFieldRef()[surfaceID];
+// Normalization of velocity for blending
+scalar alpha = 1.0;
+scalarField U_tilde(mesh.Cf().boundaryField()[surfaceID].patch().size());
+scalarField wall_b(mesh.Cf().boundaryField()[surfaceID].patch().size());
 forAll (patchFaceIDs, faceI)
 {
-    nuEff_wall[faceI] = nu_*(labelAccessor[faceI][0])/(magGradU[faceI] + ROOTVSMALL);
+    // Between 0 and 1
+    U_tilde[faceI] = (mag(U.internalField()[adjacentCellIDs[faceI]]) - U_wall[faceI])/(U_ref - U_wall[faceI]);
+    // Blending function for wall : If y+ is larger, more portion of the ML model slopes are applied to the numerator.
+    wall_b[faceI] = Foam::pow(U_tilde[faceI], alpha)*(labelAccessor[faceI][0]*U_ref/l_ref) + Foam::pow((1 - U_tilde[faceI]), alpha)*magGradU[faceI];
 }
 
+// Correction of nuEff at the wall
+scalarField& nuEff_wall = nuEff.boundaryFieldRef()[surfaceID];
+
+// Version 1 : blended wall correction
+forAll (patchFaceIDs, faceI)
+{    
+    nuEff_wall[faceI] = nu_*wall_b[faceI]/(magGradU[faceI] + ROOTVSMALL);
+}
+
+// Version 2 : fixed wall correction
+forAll (patchFaceIDs, faceI)
+{
+    //nuEff_wall[faceI] = nu_*(labelAccessor[faceI][0]*U_ref/l_ref)/(magGradU[faceI] + ROOTVSMALL);
+}
 
 //***********************************************************************/
 // First Cell Face Correction
@@ -54,53 +77,20 @@ forAll (oppFaceIDs, faceI)
     
 scalarField magGradUf(tmp_magGradUf);
 
-// Check if the activation of the 1st face correction executes for each x-coordinate
-boolField actFaceCorr(mesh.Cf().boundaryField()[surfaceID].patch().size());
 
-// Save magGradUf at a certain time step as fixedNumSlope
-for (int i = 0; i < 10; i++)
+scalarField face_b(mesh.Cf().boundaryField()[surfaceID].patch().size());
+forAll (patchFaceIDs, faceI)
 {
-    if (count == 30 + 50*i)    
-    {
-        if (fixedNumSlope.size() != 0)
-        {
-            std::vector<scalar>().swap(fixedNumSlope);
-        }
-        forAll (oppFaceIDs, faceI)
-        {
-            fixedNumSlope.push_back(magGradUf[faceI]);
-        }
-    }
+    // Reversed blending function for 1st face : If y+ is smaller, more portion of the ML model slopes are applied to the denominator
+    // in order to avoid exceedingly small magGradUf values. (ex. U_tilde = 0 -> no face correction is applied.)
+    face_b[faceI] = Foam::pow(U_tilde[faceI], alpha)*magGradUf[faceI] + Foam::pow((1 - U_tilde[faceI]), alpha)*(labelAccessor[faceI][1]*U_ref/l_ref);
 }
+
 
 // Correction of nuEff at the first cell face opposite to the wall
 forAll (oppFaceIDs, faceI)
 {
-    scalar monoton = (mag(U[adjacentCellIDs[faceI]]) - mag(U[secAdjacentCellIDs[faceI]]))
-                    *(mag(U[secAdjacentCellIDs[faceI]]) - mag(U[thirdAdjacentCellIDs[faceI]]));
-    
-    if ((magGradUf[faceI] > SMALL) && (monoton > 0))
-    {
-        nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(magGradUf[faceI] + ROOTVSMALL);
-        actFaceCorr[faceI] = 1;
-    }
-    else
-    {
-        actFaceCorr[faceI] = 0;
-    }
-
-    /*
-    if (count >= 31)
-    {
-        // Correction by the fixed velocity gradient value at the 1st face
-        //nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(fixedNumSlope[faceI] + ROOTVSMALL);
-        actFaceCorr[faceI] = 1;
-    }
-    else
-    {
-        //nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1])/(magGradUf[faceI] + ROOTVSMALL);
-        actFaceCorr[faceI] = 0;
-    }*/
+    nuEff[oppFaceIDs[faceI]] *= (labelAccessor[faceI][1]*U_ref/l_ref)/(face_b[faceI] + ROOTVSMALL);
 }
 
 
@@ -120,7 +110,7 @@ path1 += path2;
 
 OFstream outputFile(path1/filename1);
 outputFile.precision(12);
-outputFile << "ccx,nuEff_wall_norm,nuEff_face_norm,nuEff_wall,nuEff_1st_face,wall_slope,face_slope,nut_face,magGradU_wall,magGradU_face,fixedNumSlope,actFaceCorr,Ux_1st_cell,Uy_1st_cell,Ux_1st_face,Uy_1st_face,p_1st_cell,p_1st_face,scaled_y_face,scaled_avgU";
+outputFile << "ccx,nuEff_wall_norm,nuEff_face_norm,nuEff_wall,nuEff_1st_face,wall_slope,face_slope,nut_face,magGradU_wall,magGradU_face,U_tilde,wall_blending,face_blending,Ux_1st_cell,Uy_1st_cell,Ux_1st_face,Uy_1st_face,p_1st_cell,p_1st_face,scaled_y_face,scaled_avgU";
 
 forAll (patchFaceIDs, faceI)
 {
@@ -130,20 +120,14 @@ forAll (patchFaceIDs, faceI)
                 << nuEff[oppFaceIDs[faceI]]/nu_ << ", "
                 << nuEff.boundaryField()[surfaceID][faceI] << ", "
                 << nuEff[oppFaceIDs[faceI]] << ", "
-                << labelAccessor[faceI][0] << ", "
-                << labelAccessor[faceI][1] << ", "
+                << labelAccessor[faceI][0]*U_ref/l_ref << ", "
+                << labelAccessor[faceI][1]*U_ref/l_ref << ", "
                 << nuEff[oppFaceIDs[faceI]] - nu_ << ", "                
                 << magGradU[faceI] << ", "
-                << magGradUf[faceI] << ", ";
-    if (fixedNumSlope.size() != 0)
-    {
-        outputFile << fixedNumSlope[faceI] << ", ";
-    }
-    else
-    {
-        outputFile << magGradUf[faceI] << ", ";
-    }
-    outputFile << actFaceCorr[faceI] << ", "
+                << magGradUf[faceI] << ", "
+                << U_tilde[faceI] << ", "
+                << wall_b[faceI] << ", "
+                << face_b[faceI] << ", "
                 << U[adjacentCellIDs[faceI]][0] << ", "
                 << U[adjacentCellIDs[faceI]][1] << ", "
                 << U_face[oppFaceIDs[faceI]][0] << ", "

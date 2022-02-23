@@ -2,10 +2,11 @@
 int nInputFeatures = 2;
 torch::Tensor featureTensor = torch::ones({adjacentCellIDs.size(), nInputFeatures}, torch::kFloat64);
 
+// Pass normalized features
 forAll (oppFaceIDs, faceI)
 {    
-    featureTensor[faceI][0] = dist_fface[faceI];
-    featureTensor[faceI][1] = mag(U.internalField()[adjacentCellIDs[faceI]]);
+    featureTensor[faceI][0] = dist_fface[faceI]/l_ref;
+    featureTensor[faceI][1] = (mag(U.internalField()[adjacentCellIDs[faceI]]) - U_wall[faceI])/(U_ref - U_wall[faceI]);
 }
 
 // Mapping tensor
