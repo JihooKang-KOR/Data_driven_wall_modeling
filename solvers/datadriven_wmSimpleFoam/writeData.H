@@ -1,10 +1,9 @@
 // Calculate skin friction
-volScalarField nuEff_avg = fvc::average(nuEff);
-const volSymmTensorField R = nuEff_avg*dev(twoSymm(fvc::grad(U)));
 const surfaceVectorField n = mesh.Sf() / mag(mesh.Sf());
-const symmTensorField R_wall = R.boundaryField()[surfaceID];
+const volSymmTensorField devU = dev(twoSymm(fvc::grad(U)));
 const vectorField n_wall = n.boundaryField()[surfaceID];
-const vectorField tau = R_wall & n_wall;
+const symmTensorField devU_wall = devU.boundaryField()[surfaceID];
+const vectorField tau = nuEff_wall*(devU_wall & n_wall);
 const scalarField skinFric = mag(tau)/(0.5*U_ref*U_ref);
 
 // Write surface data to file
