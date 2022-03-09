@@ -1,0 +1,62 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2106                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      nuTilda;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+nuMol              3.4321e-05;
+// Assume nuTilda_inf = 4*nu as per OpenFOAM user guide
+nuTil         #eval{ 4*$nuMol };
+
+dimensions      [0 2 -1 0 0 0 0];
+
+internalField   uniform $nuTil;
+
+boundaryField
+{
+    inlet
+    {
+        type            freestream;
+        freestreamValue uniform $nuTil;
+    }
+
+    outlet
+    {
+        type            freestream;
+        freestreamValue uniform $nuTil;
+    }
+
+    airfoil
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
+
+    front
+    {
+        type            empty;
+    }
+
+    back
+    {
+        type            empty;
+    }
+    
+    processor
+    {
+        type  processor;
+        value $internalField;
+    }
+}
+
+
+// ************************************************************************* //
