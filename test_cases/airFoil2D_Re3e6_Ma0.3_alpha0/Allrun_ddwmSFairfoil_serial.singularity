@@ -93,6 +93,8 @@ then
         echo "ccx ccy Cp" > yplus_${yp}/Cp_${model}_${yp}.csv
         paste -d ' ' Cx.$$ Cy.$$ Cp.$$ >> yplus_${yp}/Cp_${model}_${yp}.csv
         \rm -f Cx.$$ Cy.$$ tau.$$ yp.$$ Cp.$$
+
+        \cp -rf $timeDir yplus_${yp}/$timeDir
     done
 fi
 EndTime=$(date +%s)

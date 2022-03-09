@@ -100,14 +100,14 @@ functions
     {
         type            solverInfo;
         libs            ("libutilityFunctionObjects.so");
-        fields          (U p);
+        fields          (U p nuTilda);
         writeResidualFields no;
         writeControl    writeTime;
     }
+    
     #includeFunc "writeCellCentres"
     #includeFunc "wallShearStress"
 
-    #include "FOMachNo"
     #include "FOyPlus"
     #include "FOforces"
     #include "FOpressure"
