@@ -58,7 +58,7 @@ then
         sed -e "s/GRADING/$grading/g" -e "s/CELL/$cell/g" -e "s/CTRAIL/$cell_trail/g" system/blockMeshDict.template > system/blockMeshDict
         
         # Add variable for residual limit value
-        res=1e-5
+        res=1e-4
         echo "Residual control: $res"        
         
         singularityRun -s ${model}_${yp} blockMesh
