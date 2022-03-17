@@ -1,22 +1,33 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  v2106                                 |
+|  \\    /   O peration     | Version:  v2006                                 |
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-FoamFile
+
+forces
 {
-    version     2.0;
-    format      ascii;
-    class       dictionary;
-    object      transportProperties;
+    type            forceCoeffs;
+    libs            (forces);
+    writeControl    timeStep;
+    writeInterval   1;
+    log false;
+
+    patches
+    (
+        airfoil
+    );
+
+    CofR        (0 0 0);
+    liftDir     (0 1 0);
+    dragDir     (1 0 0);
+    pitchAxis   (0 0 1);
+    rho         rhoInf;
+    rhoInf      1.0;
+    magUInf     30.0;
+    lRef        1.0;
+    Aref        0.2;
 }
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-transportModel  Newtonian;
-
-nu              3.4321e-05; // Re = 3.0e6
-
 
 // ************************************************************************* //

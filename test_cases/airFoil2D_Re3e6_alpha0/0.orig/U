@@ -9,36 +9,48 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       volScalarField;
-    object      nuTilda;
+    class       volVectorField;
+    object      U;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-nuMol              3.4321e-05;
-// Assume nuTilda_inf = 4*nu as per OpenFOAM user guide
-nuTil         #eval{ 4*$nuMol };
 
-dimensions      [0 2 -1 0 0 0 0];
+// Setting referred to https://github.com/AndreWeiner/naca0012_shock_buffet
 
-internalField   uniform $nuTil;
+// Rotates a vector by alpha in counter-clockwise direction (around the z-axis)
+// https://en.wikipedia.org/wiki/Rotation_matrix
+// Ufree is the free stream velocity vector at zero angle of attack
+alpha         0.0; // Angle of attack in degrees
+Ufree         (30.0 0.0 0.0); // Re = 3.0e6
+
+// Not to be changed
+alpha         #eval{ degToRad($alpha) };
+cos_alpha     #eval{ cos($alpha) };
+sin_alpha     #eval{ sin($alpha) };
+neg_sin_alpha #eval{ - $sin_alpha };
+rot_matrix    ($cos_alpha $neg_sin_alpha 0.0 $sin_alpha $cos_alpha 0.0 0.0 0.0 1.0);
+Uinlet        #eval{ $[(tensor)rot_matrix] & $[(vector)Ufree] };
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform $Uinlet;
 
 boundaryField
 {
     inlet
     {
-        type            freestream;
-        freestreamValue uniform $nuTil;
+        type            freestreamVelocity;
+        freestreamValue uniform $Uinlet;
     }
 
     outlet
     {
-        type            freestream;
-        freestreamValue uniform $nuTil;
+        type            freestreamVelocity;
+        freestreamValue uniform $Uinlet;
     }
 
     airfoil
     {
-        type            fixedValue;
-        value           uniform 0;
+        type            noSlip;
     }
 
     front

@@ -9,62 +9,52 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       dictionary;
-    object      fvSolution;
+    class       volScalarField;
+    object      nuTilda;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+nuMol              1.0e-05;
+// Assume nuTilda_inf = 4*nu as per OpenFOAM user guide
+nuTil         #eval{ 4*$nuMol };
 
-solvers
+dimensions      [0 2 -1 0 0 0 0];
+
+internalField   uniform $nuTil;
+
+boundaryField
 {
-    p
+    inlet
     {
-        solver          GAMG;
-        tolerance       1e-06;
-        relTol          0.1;
-        smoother        GaussSeidel;
+        type            freestream;
+        freestreamValue uniform $nuTil;
     }
 
-    U
+    outlet
     {
-        solver          smoothSolver;
-        smoother        GaussSeidel;
-        nSweeps         2;
-        tolerance       1e-08;
-        relTol          0.1;
+        type            freestream;
+        freestreamValue uniform $nuTil;
     }
 
-    nuTilda
+    airfoil
     {
-        solver          smoothSolver;
-        smoother        GaussSeidel;
-        nSweeps         2;
-        tolerance       1e-08;
-        relTol          0.1;
+        type            fixedValue;
+        value           uniform 0;
     }
-}
 
-SIMPLE
-{
-    nNonOrthogonalCorrectors 0;
-
-    residualControl
+    front
     {
-        p               1e-5;
-        U               1e-5;
-        nuTilda         1e-5;
+        type            empty;
     }
-}
 
-relaxationFactors
-{
-    fields
+    back
     {
-        p               0.3;
+        type            empty;
     }
-    equations
+    
+    processor
     {
-        U               0.7;
-        nuTilda         0.7;
+        type  processor;
+        value $internalField;
     }
 }
 
