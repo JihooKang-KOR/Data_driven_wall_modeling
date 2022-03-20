@@ -34,7 +34,7 @@ domain
     yFar_3   150;  // y3 : 3, 9, 17
     yFar_4    20;  // y4 : 4, 10, 18
     yMid      CELL;  // y5 : 5, 6, 7, 8, 11, 12, 13
-    yTrail    CTRAIL;  // y8 : 8, 9, 10
+    yTrail    60;  // y8 : 8, 9, 10
     
 
     // Mesh grading
