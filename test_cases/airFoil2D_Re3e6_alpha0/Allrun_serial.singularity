@@ -16,7 +16,6 @@ then
     yp_grading[10]=15
     yp_grading[30]=1
     yp_grading[50]=1
-    yp_grading[100]=1
 
     declare -A yp_cell
     yp_cell[0.05]=200
@@ -27,7 +26,16 @@ then
     yp_cell[10]=200
     yp_cell[30]=180
     yp_cell[50]=100
-    yp_cell[100]=25
+
+    declare -A yp_cell_trail
+    yp_cell_trail[0.05]=30
+    yp_cell_trail[1]=30
+    yp_cell_trail[2]=40
+    yp_cell_trail[3.5]=40
+    yp_cell_trail[5]=40
+    yp_cell_trail[10]=40
+    yp_cell_trail[30]=40
+    yp_cell_trail[50]=40
 
     for i in "${!yp_grading[@]}"
     do
@@ -35,7 +43,8 @@ then
 
         yp=$i
         grading=${yp_grading[$yp]}
-        cell=${yp_cell[$yp]}        
+        cell=${yp_cell[$yp]}
+        cell_trail=${yp_cell_trail[$yp]}
         export yp
 
         # Make directory for file separation
@@ -46,7 +55,7 @@ then
         \rm -rf 0 [1-9]*
         \cp -rf 0.orig 0
         
-        sed -e "s/GRADING/$grading/g" -e "s/CELL/$cell/g" system/blockMeshDict.template > system/blockMeshDict
+        sed -e "s/GRADING/$grading/g" -e "s/CELL/$cell/g" -e "s/CTRAIL/$cell_trail/g" system/blockMeshDict.template > system/blockMeshDict
         
         # Add variable for residual limit value
         res=1e-5

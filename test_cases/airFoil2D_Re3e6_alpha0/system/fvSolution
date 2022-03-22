@@ -51,7 +51,6 @@ SIMPLE
     {
         p               1e-5;
         U               1e-5;
-        nuTilda         1e-5;
     }
 }
 

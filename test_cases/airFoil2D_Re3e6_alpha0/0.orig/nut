@@ -23,14 +23,14 @@ boundaryField
 {
     inlet
     {
-        type            freestream;
-        freestreamValue uniform 1.0e-05;
+        type            calculated;
+        value           uniform 1.0e-05;
     }
 
     outlet
     {
-        type            freestream;
-        freestreamValue uniform 1.0e-05;
+        type            calculated;
+        value           uniform 1.0e-05;
     }
 
     airfoil
