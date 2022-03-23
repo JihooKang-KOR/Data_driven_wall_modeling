@@ -47,7 +47,7 @@ forAll (patchFaceIDs, faceI)
 }
 
 // Normalization of velocity for blending
-scalar alphaWall = 0.8;
+scalar gammaWall = 0.8;
 scalarField U_tilde(mesh.Cf().boundaryField()[surfaceID].patch().size());
 scalarField wall_b(mesh.Cf().boundaryField()[surfaceID].patch().size());
 forAll (patchFaceIDs, faceI)
@@ -55,7 +55,7 @@ forAll (patchFaceIDs, faceI)
     // Between 0 and 1
     U_tilde[faceI] = (mag(U.internalField()[adjacentCellIDs[faceI]]) - U_wall[faceI])/(U_ref - U_wall[faceI]);
     // Blending function for wall : If y+ is larger, more portion of the ML model slopes are applied to the numerator.
-    wall_b[faceI] = Foam::pow(U_tilde[faceI], alphaWall)*(labelAccessor[faceI][0]*U_ref/l_ref) + Foam::pow((1 - U_tilde[faceI]), alphaWall)*magGradU[faceI];
+    wall_b[faceI] = Foam::pow(U_tilde[faceI], gammaWall)*(labelAccessor[faceI][0]*U_ref/l_ref) + Foam::pow((1 - U_tilde[faceI]), gammaWall)*magGradU[faceI];
 }
 
 // Correction of nuEff at the wall
@@ -90,13 +90,13 @@ forAll (oppFaceIDs, faceI)
     
 scalarField magGradUf(tmp_magGradUf);
 
-scalar alphaFace = 0.7;
+scalar gammaFace = 0.7;
 scalarField face_b(mesh.Cf().boundaryField()[surfaceID].patch().size());
 forAll (patchFaceIDs, faceI)
 {
     // Reversed blending function for 1st face : If y+ is smaller, more portion of the ML model slopes are applied to the denominator
     // in order to avoid exceedingly small magGradUf values. (ex. U_tilde = 0 -> no face correction is applied.)
-    face_b[faceI] = Foam::pow(U_tilde[faceI], alphaFace)*magGradUf[faceI] + Foam::pow((1 - U_tilde[faceI]), alphaFace)*(labelAccessor[faceI][1]*U_ref/l_ref);
+    face_b[faceI] = Foam::pow(U_tilde[faceI], gammaFace)*magGradUf[faceI] + Foam::pow((1 - U_tilde[faceI]), gammaFace)*(labelAccessor[faceI][1]*U_ref/l_ref);
 }
 
 // Blended 1st face correction with yPlus blending
