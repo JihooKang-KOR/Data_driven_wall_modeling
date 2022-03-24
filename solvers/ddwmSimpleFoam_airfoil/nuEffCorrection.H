@@ -15,7 +15,7 @@ surfaceScalarField p_face = fvc::interpolate(p);
 //***********************************************************************/
 
 // Gradient of the velocity at the wall patch
-const scalarField magGradU(mag(U_sngrad.boundaryField()[surfaceID]));
+scalarField magGradU(mag(U_sngrad.boundaryField()[surfaceID]));
 
 // Distance between the first cell face opposite to the wall and the wall
 scalarField dist_fface = mag(mesh.Cf().boundaryField()[surfaceID]);
@@ -38,15 +38,24 @@ forAll (adjacentCellIDs, cellI)
 scalarField uTau(mesh.Cf().boundaryField()[surfaceID].patch().size());
 scalarField yPlusCenter(mesh.Cf().boundaryField()[surfaceID].patch().size());
 scalarField w(mesh.Cf().boundaryField()[surfaceID].patch().size());
+scalarField w2(mesh.Cf().boundaryField()[surfaceID].patch().size());
 forAll (patchFaceIDs, faceI)
 {
     uTau[faceI] = Foam::sqrt(nu_*labelAccessor[faceI][0]*U_ref/l_ref);
-    yPlusCenter[faceI] = dist_fcell[faceI]*uTau[faceI]/nu_;
-    // No y+ blending
-    w[faceI] = 0.0;
-    // Sigmoid function    
-    //w[faceI] = 1/(1 + Foam::exp(-3.0*(5 - yPlusCenter[faceI])));
-    //w[faceI] = 1/(1 + Foam::exp(-0.95*(15 - yPlusCenter[faceI])));
+    yPlusCenter[faceI] = dist_fcell[faceI]*uTau[faceI]/nu_;    
+    // Sigmoid function for correction
+    w[faceI] = 1/(1 + Foam::exp(-2.0*(5 - yPlusCenter[faceI])));
+    // Sigmoid function for limitation of magGradU and magGradUf
+    w2[faceI] = 1/(1 + Foam::exp(1.0*(yPlusCenter[faceI]))); 
+}
+
+// Limit magGradU
+forAll (oppFaceIDs, faceI)
+{
+    if (magGradU[faceI] >= 1e6*(1000*w2[faceI] + 1.0))
+    {
+        magGradU[faceI] = 1e6*(1000*w2[faceI] + 1.0);
+    }
 }
 
 // Normalization of velocity for blending
@@ -92,7 +101,7 @@ forAll (oppFaceIDs, faceI)
     if (mag(U_sngrad.internalField()[oppFaceIDs[faceI]]) == 0)
     {
         tmp_magGradUf[faceI] = 1e2;
-    }        
+    }
     else
     {
         tmp_magGradUf[faceI] = mag(U_sngrad.internalField()[oppFaceIDs[faceI]]);
@@ -100,6 +109,14 @@ forAll (oppFaceIDs, faceI)
 }
     
 scalarField magGradUf(tmp_magGradUf);
+// Limit magGradUf
+forAll (oppFaceIDs, faceI)
+{
+    if (magGradUf[faceI] >= 1e6*(1000*w2[faceI] + 1.0))
+    {
+        magGradUf[faceI] = 1e6*(1000*w2[faceI] + 1.0);
+    }
+}
 
 scalar gammaFace = 1.0;
 scalarField face_b(mesh.Cf().boundaryField()[surfaceID].patch().size());

@@ -2,20 +2,21 @@
 int nInputFeatures = 2;
 torch::Tensor featureTensor = torch::ones({adjacentCellIDs.size(), nInputFeatures}, torch::kFloat64);
 
+scalarField velNorm(mesh.Cf().boundaryField()[surfaceID].patch().size());
 // Pass normalized features
 forAll (oppFaceIDs, faceI)
 {
-    scalar velNorm = (mag(U.internalField()[adjacentCellIDs[faceI]]) - U_wall[faceI])/(U_ref - U_wall[faceI]);
+    velNorm[faceI] = (mag(U.internalField()[adjacentCellIDs[faceI]]) - U_wall[faceI])/(U_ref - U_wall[faceI]);
     featureTensor[faceI][0] = dist_fface[faceI]/l_ref;    
 
     // To avoid being out of range of the normalized velocity for smaller y+
-    if (velNorm <= 2.0 && velNorm >= 0.0)
+    if (velNorm[faceI] <= 15.0 && velNorm[faceI] >= 0.0)
     {
-        featureTensor[faceI][1] = velNorm;
+        featureTensor[faceI][1] = velNorm[faceI];
     }
     else
     {
-        featureTensor[faceI][1] = 2.0;
+        featureTensor[faceI][1] = 15.0;
     }
     
 }

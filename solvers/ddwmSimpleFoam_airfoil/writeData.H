@@ -26,7 +26,7 @@ path1 += path2;
 
 OFstream outputFile(path1/filename1);
 outputFile.precision(12);
-outputFile << "ccx,ccy,nuEff_wall_norm,nuEff_face_norm,nuEff_wall,nuEff_1st_face,wall_slope,face_slope,magUx_face,nut_face,magGradU_wall,magGradU_face,U_tilde,wall_blending,face_blending,Ux_blending,uTau,yPlus1stCent,w,tau_x,tau_y,skinFriction,pressureCoeff,Ux_1st_cell,Uy_1st_cell,Ux_1st_face,Uy_1st_face,p_1st_cell,p_1st_face,scaled_y_face,scaled_avgU,phi_face";
+outputFile << "ccx,ccy,nuEff_wall_norm,nuEff_face_norm,nuEff_wall,nuEff_1st_face,wall_slope,face_slope,magUx_face,nut_face,magGradU_wall,magGradU_face,U_tilde,wall_blending,face_blending,Ux_blending,uTau,yPlus1stCent,w_corr,w_grad,tau_x,tau_y,skinFriction,pressureCoeff,Ux_1st_cell,Uy_1st_cell,Ux_1st_face,Uy_1st_face,p_1st_cell,p_1st_face,scaled_y_face,scaled_avgU,phi_face";
 
 forAll (patchFaceIDs, faceI)
 {
@@ -50,6 +50,7 @@ forAll (patchFaceIDs, faceI)
                 << uTau[faceI] << ", "
                 << yPlusCenter[faceI] << ", "
                 << w[faceI] << ", "
+                << w2[faceI] << ", "
                 << tau[faceI][0] << ", "
                 << tau[faceI][1] << ", "
                 << skinFric[faceI] << ", "
