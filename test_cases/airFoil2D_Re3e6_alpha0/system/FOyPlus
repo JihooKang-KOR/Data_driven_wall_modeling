@@ -20,7 +20,7 @@ yPlus
     enabled         true;
     log             true;
     timeStart       0;
-    timeEnd         5000;
+    timeEnd         10000;
     executeControl  timeStep;
     executeInterval 1;
     writeControl    writeTime;
