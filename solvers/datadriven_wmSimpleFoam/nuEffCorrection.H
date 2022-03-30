@@ -38,12 +38,15 @@ forAll (adjacentCellIDs, cellI)
 scalarField uTau(mesh.Cf().boundaryField()[surfaceID].patch().size());
 scalarField yPlusCenter(mesh.Cf().boundaryField()[surfaceID].patch().size());
 scalarField w(mesh.Cf().boundaryField()[surfaceID].patch().size());
+scalarField w_face(mesh.Cf().boundaryField()[surfaceID].patch().size());
 forAll (patchFaceIDs, faceI)
 {
     uTau[faceI] = Foam::sqrt(nu_*labelAccessor[faceI][0]*U_ref/l_ref);
     yPlusCenter[faceI] = dist_fcell[faceI]*uTau[faceI]/nu_;
-    // Sigmoid function
+    // Sigmoid function for the wall
     w[faceI] = 1/(1 + Foam::exp(-0.95*(15 - yPlusCenter[faceI])));
+    // Sigmoid function for the 1st face
+    w_face[faceI] = 1/(1 + Foam::exp(-0.95*(15 - yPlusCenter[faceI]))) + 1/(1 + Foam::exp(-0.95*(yPlusCenter[faceI] - 30)));
 }
 
 // Normalization of velocity for blending
@@ -103,5 +106,5 @@ forAll (patchFaceIDs, faceI)
 forAll (oppFaceIDs, faceI)
 {
     scalar blendFace = nuEff[oppFaceIDs[faceI]]*(labelAccessor[faceI][1]*U_ref/l_ref)/(face_b[faceI] + ROOTVSMALL);
-    nuEff[oppFaceIDs[faceI]] = w[faceI]*nuEff[oppFaceIDs[faceI]] + (1 - w[faceI])*blendFace;    
+    nuEff[oppFaceIDs[faceI]] = w_face[faceI]*nuEff[oppFaceIDs[faceI]] + (1 - w_face[faceI])*blendFace;
 }

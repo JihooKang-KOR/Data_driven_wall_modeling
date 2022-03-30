@@ -22,12 +22,13 @@ path1 += path2;
 
 OFstream outputFile(path1/filename1);
 outputFile.precision(12);
-outputFile << "ccx,nuEff_wall_norm,nuEff_face_norm,nuEff_wall,nuEff_1st_face,wall_slope,face_slope,nut_face,magGradU_wall,magGradU_face,U_tilde,wall_blending,face_blending,uTau,yPlus1stCent,w,tau_x,tau_y,skinFriction,Ux_1st_cell,Uy_1st_cell,Ux_1st_face,Uy_1st_face,p_1st_cell,p_1st_face,scaled_y_face,scaled_avgU";
+outputFile << "ccx,1stFaceDistance,nuEff_wall_norm,nuEff_face_norm,nuEff_wall,nuEff_1st_face,wall_slope,face_slope,nut_face,magGradU_wall,magGradU_face,U_tilde,wall_blending,face_blending,wallCorrRatio,faceCorrRatio,uTau,yPlus1stCent,w_wall,w_face,tau_x,tau_y,skinFriction,Ux_1st_cell,Uy_1st_cell,Ux_1st_face,Uy_1st_face,p_1st_cell,p_1st_face,scaled_y_face,scaled_avgU";
 
 forAll (patchFaceIDs, faceI)
 {
     outputFile << "\n";        
     outputFile << Cf[faceI].x() << ", "
+                << dist_fface[faceI] << ", "
                 << nuEff.boundaryField()[surfaceID][faceI]/nu_ << ", "
                 << nuEff[oppFaceIDs[faceI]]/nu_ << ", "
                 << nuEff.boundaryField()[surfaceID][faceI] << ", "
@@ -40,9 +41,12 @@ forAll (patchFaceIDs, faceI)
                 << U_tilde[faceI] << ", "
                 << wall_b[faceI] << ", "
                 << face_b[faceI] << ", "
+                << wall_b[faceI]/(magGradU[faceI] + ROOTVSMALL) << ", "
+                << (labelAccessor[faceI][1]*U_ref/l_ref)/(face_b[faceI] + ROOTVSMALL) << ", "
                 << uTau[faceI] << ", "
                 << yPlusCenter[faceI] << ", "
                 << w[faceI] << ", "
+                << w_face[faceI] << ", "
                 << tau[faceI][0] << ", "
                 << tau[faceI][1] << ", "
                 << skinFric[faceI] << ", "
