@@ -7,7 +7,7 @@ scalarField velNorm(mesh.Cf().boundaryField()[surfaceID].patch().size());
 forAll (oppFaceIDs, faceI)
 {
     velNorm[faceI] = (mag(U.internalField()[adjacentCellIDs[faceI]]) - U_wall[faceI])/(U_ref - U_wall[faceI]);
-    featureTensor[faceI][0] = dist_fface[faceI]/l_ref;    
+    featureTensor[faceI][0] = dist_fface[faceI]/l_ref;
 
     // To avoid being out of range of the normalized velocity for smaller y+
     if (velNorm[faceI] <= 15.0 && velNorm[faceI] >= 0.0)

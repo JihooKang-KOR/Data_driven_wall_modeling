@@ -38,15 +38,18 @@ forAll (adjacentCellIDs, cellI)
 scalarField uTau(mesh.Cf().boundaryField()[surfaceID].patch().size());
 scalarField yPlusCenter(mesh.Cf().boundaryField()[surfaceID].patch().size());
 scalarField w(mesh.Cf().boundaryField()[surfaceID].patch().size());
+scalarField w_face(mesh.Cf().boundaryField()[surfaceID].patch().size());
 scalarField w2(mesh.Cf().boundaryField()[surfaceID].patch().size());
 forAll (patchFaceIDs, faceI)
 {
     uTau[faceI] = Foam::sqrt(nu_*labelAccessor[faceI][0]*U_ref/l_ref);
     yPlusCenter[faceI] = dist_fcell[faceI]*uTau[faceI]/nu_;    
-    // Sigmoid function for correction
-    w[faceI] = 1/(1 + Foam::exp(-2.0*(5 - yPlusCenter[faceI])));
+    // Sigmoid function for wall correction
+    w[faceI] = 1/(1 + Foam::exp(-2.0*(3 - yPlusCenter[faceI])));
+    // Sigmoid function for 1st face correction
+    w_face[faceI] = 1/(1 + Foam::exp(-2.0*(3 - yPlusCenter[faceI]))) + 1/(1 + Foam::exp(-2.0*(yPlusCenter[faceI] - 10)));
     // Sigmoid function for limitation of magGradU and magGradUf
-    w2[faceI] = 1/(1 + Foam::exp(1.0*(yPlusCenter[faceI]))); 
+    w2[faceI] = 1/(1 + Foam::exp(1.0*(yPlusCenter[faceI])));
 }
 
 // Limit magGradU
@@ -59,7 +62,7 @@ forAll (oppFaceIDs, faceI)
 }
 
 // Normalization of velocity for blending
-scalar gammaWall = 1.0;
+scalar gammaWall = 0.8;
 scalarField U_tilde(mesh.Cf().boundaryField()[surfaceID].patch().size());
 scalarField wall_b(mesh.Cf().boundaryField()[surfaceID].patch().size());
 forAll (patchFaceIDs, faceI)
@@ -118,7 +121,7 @@ forAll (oppFaceIDs, faceI)
     }
 }
 
-scalar gammaFace = 1.0;
+scalar gammaFace = 0.7;
 scalarField face_b(mesh.Cf().boundaryField()[surfaceID].patch().size());
 forAll (patchFaceIDs, faceI)
 {
@@ -133,6 +136,6 @@ forAll (oppFaceIDs, faceI)
     if (mesh.Cf().boundaryField()[surfaceID][faceI].x() < 0.998)
     {
         scalar blendFace = nuEff[oppFaceIDs[faceI]]*(labelAccessor[faceI][1]*U_ref/l_ref)/(face_b[faceI] + ROOTVSMALL);
-        nuEff[oppFaceIDs[faceI]] = w[faceI]*nuEff[oppFaceIDs[faceI]] + (1 - w[faceI])*blendFace;
+        nuEff[oppFaceIDs[faceI]] = w_face[faceI]*nuEff[oppFaceIDs[faceI]] + (1 - w_face[faceI])*blendFace;
     }
 }

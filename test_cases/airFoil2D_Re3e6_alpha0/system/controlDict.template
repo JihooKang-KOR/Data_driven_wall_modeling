@@ -14,7 +14,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     simpleFoam;
+application     ddwmSimpleFoam_airfoil;
 
 startFrom       startTime;
 
@@ -22,7 +22,7 @@ startTime       0;
 
 stopAt          endTime;
 
-endTime         10000;
+endTime         FINALTIME;
 
 deltaT          1;
 

@@ -41,6 +41,16 @@ then
     yp_cell_trail[30]=40
     yp_cell_trail[50]=40
 
+    declare -A final_time
+    final_time[0.05]=10000
+    final_time[1]=10000
+    final_time[2]=10000
+    final_time[3.5]=5000
+    final_time[5]=4000
+    final_time[10]=3000
+    final_time[30]=2500
+    final_time[50]=2500
+
     for i in "${!yp_grading[@]}"
     do
         echo "Processing model: $model"
@@ -49,6 +59,7 @@ then
         grading=${yp_grading[$yp]}
         cell=${yp_cell[$yp]}
         cell_trail=${yp_cell_trail[$yp]}
+        ft=${final_time[$yp]}
         export yp
 
         # Make directory for file separation
@@ -60,6 +71,7 @@ then
         \cp -rf 0.orig 0
         
         sed -e "s/GRADING/$grading/g" -e "s/CELL/$cell/g" -e "s/CTRAIL/$cell_trail/g" system/blockMeshDict.template > system/blockMeshDict
+        sed -e "s/FINALTIME/$ft/g" system/controlDict.template > system/controlDict
         
         # Add variable for residual limit value
         res=1e-5

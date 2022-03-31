@@ -26,13 +26,14 @@ path1 += path2;
 
 OFstream outputFile(path1/filename1);
 outputFile.precision(12);
-outputFile << "ccx,ccy,nuEff_wall_norm,nuEff_face_norm,nuEff_wall,nuEff_1st_face,wall_slope,face_slope,magUx_face,nut_face,magGradU_wall,magGradU_face,U_tilde,wall_blending,face_blending,Ux_blending,uTau,yPlus1stCent,w_corr,w_grad,tau_x,tau_y,skinFriction,pressureCoeff,Ux_1st_cell,Uy_1st_cell,Ux_1st_face,Uy_1st_face,p_1st_cell,p_1st_face,scaled_y_face,scaled_avgU,phi_face";
+outputFile << "ccx,ccy,1stFaceDistance,nuEff_wall_norm,nuEff_face_norm,nuEff_wall,nuEff_1st_face,wall_slope,face_slope,magUx_face,nut_face,magGradU_wall,magGradU_face,U_tilde,wall_blending,face_blending,Ux_blending,wallCorrRatio,faceCorrRatio,convCorrRatio,uTau,yPlus1stCent,w_wallCorr,w_faceCorr,w_grad,tau_x,tau_y,skinFriction,pressureCoeff,Ux_1st_cell,Uy_1st_cell,Ux_1st_face,Uy_1st_face,p_1st_cell,p_1st_face,scaled_y_face,scaled_avgU,phi_face";
 
 forAll (patchFaceIDs, faceI)
 {
     outputFile << "\n";        
     outputFile << Cf[faceI].x() << ", "
                 << Cf[faceI].y() << ", "
+                << dist_fface[faceI] << ", "
                 << nuEff.boundaryField()[surfaceID][faceI]/nu_ << ", "
                 << nuEff[oppFaceIDs[faceI]]/nu_ << ", "
                 << nuEff.boundaryField()[surfaceID][faceI] << ", "
@@ -47,9 +48,13 @@ forAll (patchFaceIDs, faceI)
                 << wall_b[faceI] << ", "
                 << face_b[faceI] << ", "
                 << Uface_b[faceI] << ", "
+                << wall_b[faceI]/(magGradU[faceI] + ROOTVSMALL) << ", "
+                << (labelAccessor[faceI][1]*U_ref/l_ref)/(face_b[faceI] + ROOTVSMALL) << ", "
+                << (Uface_b[faceI])/(mag(U_face[oppFaceIDs[faceI]]) + ROOTVSMALL) << ", "
                 << uTau[faceI] << ", "
                 << yPlusCenter[faceI] << ", "
                 << w[faceI] << ", "
+                << w_face[faceI] << ", "
                 << w2[faceI] << ", "
                 << tau[faceI][0] << ", "
                 << tau[faceI][1] << ", "
