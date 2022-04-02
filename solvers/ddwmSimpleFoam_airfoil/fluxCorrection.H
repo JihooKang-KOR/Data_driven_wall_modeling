@@ -12,6 +12,6 @@ forAll (oppFaceIDs, faceI)
     if (mesh.Cf().boundaryField()[surfaceID][faceI].x() < 0.998)
     {
         scalar blendPhi = phi[oppFaceIDs[faceI]]*(Uface_b[faceI])/(mag(U_face[oppFaceIDs[faceI]]) + ROOTVSMALL);
-        phi[oppFaceIDs[faceI]] = w[faceI]*phi[oppFaceIDs[faceI]] + (1 - w[faceI])*blendPhi;
+        phi[oppFaceIDs[faceI]] = w_face[faceI]*phi[oppFaceIDs[faceI]] + (1 - w_face[faceI])*blendPhi;
     }
 }

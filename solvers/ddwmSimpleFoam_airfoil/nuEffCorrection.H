@@ -45,9 +45,9 @@ forAll (patchFaceIDs, faceI)
     uTau[faceI] = Foam::sqrt(nu_*labelAccessor[faceI][0]*U_ref/l_ref);
     yPlusCenter[faceI] = dist_fcell[faceI]*uTau[faceI]/nu_;    
     // Sigmoid function for wall correction
-    w[faceI] = 1/(1 + Foam::exp(-2.0*(3 - yPlusCenter[faceI])));
+    w[faceI] = 1/(1 + Foam::exp(-0.95*(15 - yPlusCenter[faceI])));
     // Sigmoid function for 1st face correction
-    w_face[faceI] = 1/(1 + Foam::exp(-2.0*(3 - yPlusCenter[faceI]))) + 1/(1 + Foam::exp(-2.0*(yPlusCenter[faceI] - 10)));
+    w_face[faceI] = 1/(1 + Foam::exp(-0.95*(15 - yPlusCenter[faceI]))) + 1/(1 + Foam::exp(-0.95*(yPlusCenter[faceI] - 30)));
     // Sigmoid function for limitation of magGradU and magGradUf
     w2[faceI] = 1/(1 + Foam::exp(1.0*(yPlusCenter[faceI])));
 }
