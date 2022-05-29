@@ -22,7 +22,7 @@ radius  1.0;
 // Physical width in x and z-direction
 width   0.01;
 // Number of cells in y-direction
-cells   400;
+cells   1600;
 // Mesh grading in y-direction
 grading 400;
 

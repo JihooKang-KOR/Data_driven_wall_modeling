@@ -2,7 +2,7 @@
 # most functions are copied from $WM_PROJECT_DIR/bin/tools/RunFunctions of OpenFOAM-v2106
 # with small modifications to run with Singularity
 
-image="../../../of2106.sif"
+image="../../of2106.sif"
 bashrc="/usr/lib/openfoam/openfoam2106/etc/bashrc"
 
 imageFound()

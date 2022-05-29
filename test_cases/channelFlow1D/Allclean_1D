@@ -1,9 +1,9 @@
 #!/bin/bash
-cd "${0%/*}" || exit                                # Run from this directory
-. ${WM_PROJECT_DIR:?}/bin/tools/CleanFunctions      # Tutorial clean functions
+cd "${0%/*}" || exit     # Run from this directory
+. ../../functions        # Singularity run functions
 #------------------------------------------------------------------------------
 
-cleanCase0
+cleanCase
 
 # Clear folders including 0.orig that is not included in CleanFunctions
 rm -rf postProcessing-*

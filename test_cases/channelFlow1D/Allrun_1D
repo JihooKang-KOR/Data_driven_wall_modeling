@@ -1,14 +1,32 @@
 #!/bin/bash
-cd "${0%/*}" || exit                                # Run from this directory
-. ${WM_PROJECT_DIR:?}/bin/tools/RunFunctions        # Tutorial run functions
+cd "${0%/*}" || exit     # Run from this directory
+. ../../functions        # Singularity run functions
 #------------------------------------------------------------------------------
+
+declare -A endtime
+endtime["1st"]=0.01
+endtime["2nd"]=0.1
+
+declare -A interval
+interval["1st"]=0.0002
+interval["2nd"]=0.001
 
 \cp -rf 0.SA 0
 
 # dummy file for post-processing with paraview
 touch post.foam
 
-# mesh creation
-runApplication blockMesh
+for i in "${!endtime[@]}"
+do
+    et=${endtime[$i]}
+    iv=${interval[$i]}
 
-runApplication pimpleFoam
+    sed -e "s/ENDTIME/$et/g" -e "s/INTERVAL/$iv/g" system/controlDict.template > system/controlDict
+    
+    # mesh creation
+    singularityRun blockMesh
+
+    singularityRun pimpleFoam
+    
+    mv log.pimpleFoam log.pimpleFoam.$i
+done
