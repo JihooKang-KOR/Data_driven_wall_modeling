@@ -41,8 +41,12 @@ boundaryField
 
     bottomWall
     {
+        // No wall function
         type            fixedValue;
         value           uniform 0.0;
+        // Standard wall function
+        //type            nutUSpaldingWallFunction;
+        //value           $internalField;
     }
 
     symmetry

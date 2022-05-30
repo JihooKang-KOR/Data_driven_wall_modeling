@@ -37,7 +37,32 @@ field1d_data = pd.read_csv(field1d_path, delim_whitespace=False)
 8. After the notebook is executed, the two folders are created to use in OpenFOAM. These models are already in each 2D case if needed.
 
 ## Application of trained ML models
-### 2D flat plate
+### 2D flat plate (No wall function / Standard wall function cases)
+1. The case is found in ```./test_cases/turbulentFlatPlate```.
+2. To run the test case, copy the case from *test_cases* to *run*, and execute the *Allrun.singularity* script.
+
+```
+cp -r test_cases/turbulentFlatPlate run/
+cd run/turbulentFlatPlate
+./Allrun.singularity
+```
+3. To change the type of wall function, the *nut* file in ```(topFolder)/0.SpalartAllmaras``` folder needs to be modified. For no wall function, keep the script as it is. For the standard wall function *nutUSpaldingWallFunction*, comment out the line 45 and 46, and comment the line 48 and 49.
+```
+42    bottomWall
+43    {
+44        // No wall function
+45        type            fixedValue;
+46        value           uniform 0.0;
+47        // Standard wall function
+48        //type            nutUSpaldingWallFunction;
+49        //value           $internalField;
+50    }
+```
+
+4. This simulation is executed as parallel, and therefore MPI is used. To change the setting of the number of CPU cores, edit *decomposeParDict* in ```(topFolder)/system``` folder.
+
+### 2D flat plate (Data-driven wall function)
+
 ### 2D airfoil (NACA-0012)
 
 ## Notebooks
@@ -46,4 +71,20 @@ field1d_data = pd.read_csv(field1d_path, delim_whitespace=False)
 
 ## Utilities
 
-## References
+## Thesis
+The thesis for the project : 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6590747.svg)](https://doi.org/10.5281/zenodo.6590747)
+
+BibTeX :
+```
+@misc{kang_jihoo_2022_6590747,
+  author       = {Kang, Jihoo},
+  title        = {{Design and implementation of a data-driven wall 
+                   function for the velocity in RANS simulations}},
+  month        = may,
+  year         = 2022,
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.6590747},
+  url          = {https://doi.org/10.5281/zenodo.6590747}
+}
+```

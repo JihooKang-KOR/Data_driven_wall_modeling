@@ -15,7 +15,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     datadriven_wmSimpleFoam;
+application     simpleFoam;
 
 startFrom       startTime;
 
@@ -70,7 +70,6 @@ functions
         writeResidualFields no;
         writeControl    writeTime;
     }
-
     #includeFunc "writeCellCentres"
     #includeFunc "wallShearStress"
 }
