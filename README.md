@@ -62,6 +62,31 @@ cd run/turbulentFlatPlate
 4. This simulation is executed as parallel, and therefore MPI is used. To change the setting of the number of CPU cores, edit *decomposeParDict* in ```(topFolder)/system``` folder.
 
 ### 2D flat plate (Data-driven wall function)
+1. The case is found in ```./test_cases/turbulentFlatPlate_datadriven```.
+2. To run the test case, copy the case from *test_cases* to *run*, and execute the *Allrun.singularity_ddwmSimpleFoam_serial* script.
+
+```
+cp -r test_cases/turbulentFlatPlate_datadriven run/
+cd run/turbulentFlatPlate_datadriven
+./Allrun.singularity_ddwmSimpleFoam_serial
+```
+
+3. To change the correction method (either the wall correction or the wall/face correction), move to ```(topFolder)/solvers/datadriven_wmSimpleFoam``` and edit *nuEffCorrection.H*. For the wall correction, the line 108 and 109 should be commented out, then no face correction occurs. For the wall/face correction, keep it as it is.
+```
+105 // Blended 1st face correction with yPlus blending
+106 forAll (oppFaceIDs, faceI)
+107 {
+108     scalar blendFace = nuEff[oppFaceIDs[faceI]]*(labelAccessor[faceI][1]*U_ref/l_ref)/(face_b[faceI] + ROOTVSMALL);
+109     nuEff[oppFaceIDs[faceI]] = w_face[faceI]*nuEff[oppFaceIDs[faceI]] + (1 - w_face[faceI])*blendFace;
+110 }
+```
+4. ```wmake``` needs not to be executed because it is already included in the *Allrun.singularity_ddwmSimpleFoam_serial* script.
+
+5. In ```(topFolder)/notebooks```, *PlotCf_2DflatPlate.ipynb* shows the mesh-dependency of four scenarios that correspond to no wall function, standard wall function, data-driven wall function with wall correction, and data-driven wall function with wall/face correction by plotting skin friction, which were investigated in the thesis. In order to execute the notebook, change the folder name in the notebook accordingly for one's cases.
+
+6. The folders *normalized1DModel* and *scaleModule* made from the ML training phase are already included in the test case, and thus one can run the data-driven wall function cases without executing the notebook *BestMapping_1DChannel.ipynb* in the training phase.
+
+7. This simulation is executed as serial due to an indexing issue along the plate in the modified solver.
 
 ### 2D airfoil (NACA-0012)
 
