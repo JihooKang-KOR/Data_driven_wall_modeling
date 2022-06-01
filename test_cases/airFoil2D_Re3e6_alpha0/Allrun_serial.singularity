@@ -1,6 +1,6 @@
 #!/bin/bash
 cd "${0%/*}" || exit               # Run from this directory
-. ../../../functions_subfolder     # Singularity run functions
+. ../../functions               # Singularity run functions
 #------------------------------------------------------------------------------
 StartTime=$(date +%s)
 if notTest "$@"
@@ -14,8 +14,8 @@ then
     yp_grading[3.5]=65
     yp_grading[5]=50
     yp_grading[10]=15
-    yp_grading[30]=1
     yp_grading[50]=1
+    yp_grading[100]=1
 
     declare -A yp_cell
     yp_cell[0.05]=200
@@ -24,8 +24,8 @@ then
     yp_cell[3.5]=200
     yp_cell[5]=200
     yp_cell[10]=200
-    yp_cell[30]=180
-    yp_cell[50]=100
+    yp_cell[50]=180
+    yp_cell[100]=100
 
     declare -A yp_cell_trail
     yp_cell_trail[0.05]=30
@@ -34,8 +34,8 @@ then
     yp_cell_trail[3.5]=40
     yp_cell_trail[5]=40
     yp_cell_trail[10]=40
-    yp_cell_trail[30]=40
     yp_cell_trail[50]=40
+    yp_cell_trail[100]=40
 
     declare -A final_time
     final_time[0.05]=10000
@@ -44,8 +44,8 @@ then
     final_time[3.5]=5000
     final_time[5]=4000
     final_time[10]=3000
-    final_time[30]=2500
     final_time[50]=2500
+    final_time[100]=2500
 
     for i in "${!yp_grading[@]}"
     do

@@ -10,35 +10,35 @@ FoamFile
     version     2.0;
     format      ascii;
     class       volScalarField;
-    object      nut;
+    object      nuTilda;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+nuMol              1.0e-05;
+// Assume nuTilda_inf = 4*nu as per OpenFOAM user guide
+nuTil         #eval{ 4*$nuMol };
 
 dimensions      [0 2 -1 0 0 0 0];
 
-// Assume nut_inf = nu = 1.0e-05 as per OpenFOAM user guide
-internalField   uniform 1.0e-05;
+internalField   uniform $nuTil;
 
 boundaryField
 {
     inlet
     {
-        type            calculated;
-        value           uniform 1.0e-05;
+        type            freestream;
+        freestreamValue uniform $nuTil;
     }
 
     outlet
     {
-        type            calculated;
-        value           uniform 1.0e-05;
+        type            freestream;
+        freestreamValue uniform $nuTil;
     }
 
     airfoil
     {
-        type            fixedValue; // without wall functions
+        type            fixedValue;
         value           uniform 0;
-        //type            nutUSpaldingWallFunction; // with the wall function
-        //value           $internalField;
     }
 
     front

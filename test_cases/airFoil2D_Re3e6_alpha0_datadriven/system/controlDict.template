@@ -1,0 +1,118 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2106                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     ddwmSimpleFoam_airfoil;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         FINALTIME;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   1000;
+
+purgeWrite      1;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+functions
+{
+    momErr
+    {
+        type            momentumError;
+        libs            (fieldFunctionObjects);
+        executeControl  writeTime;
+        writeControl    writeTime;
+    }
+
+    contErr
+    {
+        type            div;
+        libs            (fieldFunctionObjects);
+        field           phi;
+        executeControl  writeTime;
+        writeControl    writeTime;
+    }
+
+
+    turbulenceFields1
+    {
+        type            turbulenceFields;
+        libs            (fieldFunctionObjects);
+        fields
+        (
+            k
+            epsilon
+            nut
+            nuEff
+            R
+            devReff
+            L
+            I
+        );
+
+        executeControl  writeTime;
+        writeControl    writeTime;
+    }
+
+    mag1
+    {
+        type            mag;
+        libs            (fieldFunctionObjects);
+        field           turbulenceProperties:R;
+
+        result          magR;
+        executeControl  writeTime;
+        writeControl    writeTime;
+    }
+    
+    // Add solverInfo to calculate residuals
+    solverInfo
+    {
+        type            solverInfo;
+        libs            ("libutilityFunctionObjects.so");
+        fields          (U p nuTilda);
+        writeResidualFields no;
+        writeControl    writeTime;
+    }
+    
+    #includeFunc "writeCellCentres"
+    #includeFunc "wallShearStress"
+
+    #include "FOyPlus"
+    #include "FOforces"
+    #include "FOpressure"
+    #include "FOsurfaceSample"
+}
+
+
+// ************************************************************************* //

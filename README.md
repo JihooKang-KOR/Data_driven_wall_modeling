@@ -28,7 +28,7 @@ cd run/channelFlow1D
 
 6. Then, move to ```../../run/channelFlow1D``` folder, and type ```extractData```. This makes a csv file that contains all the features and the labels.
 
-7. In ```(topFolder)/notebooks```, *BestMapping_1DChannel.ipynb* needs to be executed to obtain the trained ML models. In the data loading cell in this notebook, the folder name needs to be changed if a specific folder name is used in the *run* folder. In the case of this document, *channelFlow1D_1.388_69.4* should be changed to *channelFlow1D*.
+7. In ```(topFolder)/notebooks```, [BestMapping_1DChannel.ipynb](https://github.com/JihooKang-KOR/Data_driven_wall_modeling/blob/main/notebooks/BestMapping_1DChannel.ipynb) needs to be executed to obtain the trained ML models. In the data loading cell in this notebook, the folder name needs to be changed if a specific folder name is used in the *run* folder. In the case of this document, *channelFlow1D_1.388_69.4* should be changed to *channelFlow1D*.
 ```
 field1d_path = run + 'channelFlow1D_1.388_69.4/extractData.csv'
 field1d_data = pd.read_csv(field1d_path, delim_whitespace=False)
@@ -82,13 +82,73 @@ cd run/turbulentFlatPlate_datadriven
 ```
 4. ```wmake``` needs not to be executed because it is already included in the *Allrun.singularity_ddwmSimpleFoam_serial* script.
 
-5. In ```(topFolder)/notebooks```, *PlotCf_2DflatPlate.ipynb* shows the mesh-dependency of four scenarios that correspond to no wall function, standard wall function, data-driven wall function with wall correction, and data-driven wall function with wall/face correction by plotting skin friction, which were investigated in the thesis. In order to execute the notebook, change the folder name in the notebook accordingly for one's cases.
+5. In ```(topFolder)/notebooks```, [PlotCf_2DflatPlate.ipynb](https://github.com/JihooKang-KOR/Data_driven_wall_modeling/blob/main/notebooks/PlotCf_2DflatPlate.ipynb) shows the mesh-dependency of four scenarios that correspond to no wall function, standard wall function, data-driven wall function with wall correction, and data-driven wall function with wall/face correction by plotting skin friction, which was investigated in the thesis. In order to execute the notebook, change the folder name in the notebook accordingly for one's cases.
 
-6. The folders *normalized1DModel* and *scaleModule* made from the ML training phase are already included in the test case, and thus one can run the data-driven wall function cases without executing the notebook *BestMapping_1DChannel.ipynb* in the training phase.
+6. The folders *normalized1DModel* and *scaleModule* made from the ML training phase are already included in the test case, and thus one can run the data-driven wall function cases without executing the notebook [BestMapping_1DChannel.ipynb](https://github.com/JihooKang-KOR/Data_driven_wall_modeling/blob/main/notebooks/BestMapping_1DChannel.ipynb) in the training phase.
 
 7. This simulation is executed as serial due to an indexing issue along the plate in the modified solver.
 
-### 2D airfoil (NACA-0012)
+### 2D NACA-0012 airfoil (No wall function / Standard wall function cases)
+1. The case is found in ```./test_cases/airFoil2D_Re3e6_alpha0```. The case is with Re = 3e6 and the angle of attack 0 degree.
+2. To run the test case, copy the case from *test_cases* to *run*, and execute the *Allrun_serial.singularity* script.
+
+```
+cp -r test_cases/airFoil2D_Re3e6_alpha0 run/
+cd run/airFoil2D_Re3e6_alpha0
+./Allrun_serial.singularity
+```
+3. To change the type of wall function, the *nut* file in ```(topFolder)/0.orig``` folder needs to be modified. For no wall function, keep the script as it is. For the standard wall function *nutUSpaldingWallFunction*, comment out the line 38 and 39, and comment the line 40 and 41.
+```
+36    airfoil
+37    {
+38        type            fixedValue; // without wall functions
+39        value           uniform 0;
+40        //type            nutUSpaldingWallFunction; // with the wall function
+41        //value           $internalField;
+42    }
+```
+4. The NACA profile for *blockMesh* is from the repository https://github.com/AndreWeiner/naca0012_shock_buffet.
+
+### 2D NACA-0012 airfoil (Data-driven wall function)
+1. The case is found in ```./test_cases/airFoil2D_Re3e6_alpha0_datadriven```.
+2. To run the test case, copy the case from *test_cases* to *run*, and execute the *Allrun_ddwmSFairfoil_serial.singularity* script.
+
+```
+cp -r test_cases/airFoil2D_Re3e6_alpha0_datadriven run/
+cd run/airFoil2D_Re3e6_alpha0_datadriven
+./Allrun_ddwmSFairfoil_serial.singularity
+```
+
+3. To change the correction method (either the wall correction or the wall/face correction), move to ```(topFolder)/solvers/ddwmSimpleFoam_airfoil``` and edit *nuEffCorrection.H* (for diffusive flux) and *fluxCorrection.H* (for convective flux). For the wall correction, the line 138 and 139 for *nuEffCorrection.H* as well as the line 14 and 15 for *fluxCorrection.H* should be commented out, then no face correction occurs. For the wall/face correction, keep it as it is.
+
+*nuEffCorrection.H*
+```
+133 // Blended 1st face correction with yPlus blending
+134 forAll (oppFaceIDs, faceI)
+135 {
+136     if (mesh.Cf().boundaryField()[surfaceID][faceI].x() < 0.998)
+137     {
+138         scalar blendFace = nuEff[oppFaceIDs[faceI]]*(labelAccessor[faceI][1]*U_ref/l_ref)/(face_b[faceI] + ROOTVSMALL);
+139         nuEff[oppFaceIDs[faceI]] = w_face[faceI]*nuEff[oppFaceIDs[faceI]] + (1 - w_face[faceI])*blendFace;
+140     }
+141 }
+```
+*fluxCorrection.H*
+```
+ 9 // Convective flux correction at the 1st face
+10 forAll (oppFaceIDs, faceI)
+11 {
+12     if (mesh.Cf().boundaryField()[surfaceID][faceI].x() < 0.998)
+13     {
+14         scalar blendPhi = phi[oppFaceIDs[faceI]]*(Uface_b[faceI])/(mag(U_face[oppFaceIDs[faceI]]) + ROOTVSMALL);
+15         phi[oppFaceIDs[faceI]] = w_face[faceI]*phi[oppFaceIDs[faceI]] + (1 - w_face[faceI])*blendPhi;
+16     }
+17 }
+```
+
+4. In ```(topFolder)/notebooks```, [PlotCf_Cp_2Dairfoil.ipynb](https://github.com/JihooKang-KOR/Data_driven_wall_modeling/blob/main/notebooks/PlotCf_Cp_2Dairfoil.ipynb) shows the mesh-dependency of four scenarios by plotting skin friction and pressure coefficient, which was investigated in the thesis. In order to execute the notebook, change the folder name in the notebook accordingly for one's cases.
+
+5. The folders *normalized1DModel* and *scaleModule* made from the ML training phase are already included in the test case as well.
 
 ## Notebooks
 

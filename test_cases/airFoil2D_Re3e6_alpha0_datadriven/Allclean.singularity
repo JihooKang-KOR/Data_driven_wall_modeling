@@ -1,0 +1,11 @@
+#!/bin/bash
+cd "${0%/*}" || exit     # Run from this directory
+. ../../functions        # Singularity run functions
+#------------------------------------------------------------------------------
+
+cleanCase
+
+rm -rf constant/polyMesh
+rm -rf postProcessing-* yplus*
+rm -f *.csv system/blockMeshDict
+#------------------------------------------------------------------------------

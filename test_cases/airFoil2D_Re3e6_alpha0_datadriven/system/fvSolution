@@ -9,52 +9,62 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       volScalarField;
-    object      nut;
+    class       dictionary;
+    object      fvSolution;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -1 0 0 0 0];
-
-// Assume nut_inf = nu = 1.0e-05 as per OpenFOAM user guide
-internalField   uniform 1.0e-05;
-
-boundaryField
+solvers
 {
-    inlet
+    p
     {
-        type            calculated;
-        value           uniform 1.0e-05;
+        solver          GAMG;
+        tolerance       1e-06;
+        relTol          0.1;
+        smoother        GaussSeidel;
     }
 
-    outlet
+    U
     {
-        type            calculated;
-        value           uniform 1.0e-05;
+        solver          smoothSolver;
+        smoother        GaussSeidel;
+        nSweeps         2;
+        tolerance       1e-08;
+        relTol          0.1;
     }
 
-    airfoil
+    nuTilda
     {
-        type            fixedValue; // without wall functions
-        value           uniform 0;
-        //type            nutUSpaldingWallFunction; // with the wall function
-        //value           $internalField;
+        solver          smoothSolver;
+        smoother        GaussSeidel;
+        nSweeps         2;
+        tolerance       1e-08;
+        relTol          0.1;
     }
+}
 
-    front
-    {
-        type            empty;
-    }
+SIMPLE
+{
+    nNonOrthogonalCorrectors 0;
 
-    back
+    residualControl
     {
-        type            empty;
+        p               1e-5;
+        U               1e-5;
+        nuTilda         1e-5;
     }
-    
-    processor
+}
+
+relaxationFactors
+{
+    fields
     {
-        type  processor;
-        value $internalField;
+        p               0.3;
+    }
+    equations
+    {
+        U               0.7;
+        nuTilda         0.7;
     }
 }
 

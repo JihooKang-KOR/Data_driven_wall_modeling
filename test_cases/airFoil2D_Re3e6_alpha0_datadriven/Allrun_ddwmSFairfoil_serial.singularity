@@ -1,6 +1,10 @@
 #!/bin/bash
-cd "${0%/*}" || exit                                # Run from this directory
-. ${WM_PROJECT_DIR:?}/bin/tools/RunFunctions        # Tutorial run functions
+cd "${0%/*}" || exit             # Run from this directory
+. ../../functions             # Singularity run functions
+
+cd ../../solvers/ddwmSimpleFoam_airfoil
+singularity exec "../../of2106.sif" bash -c "source $bashrc && wmake"
+cd ../../run/airFoil2D_Re3e6_alpha0_datadriven
 #------------------------------------------------------------------------------
 StartTime=$(date +%s)
 if notTest "$@"
@@ -14,8 +18,8 @@ then
     yp_grading[3.5]=65
     yp_grading[5]=50
     yp_grading[10]=15
-    yp_grading[30]=1
-    yp_grading[50]=1    
+    yp_grading[50]=1
+    yp_grading[100]=1
 
     declare -A yp_cell
     yp_cell[0.05]=200
@@ -24,9 +28,9 @@ then
     yp_cell[3.5]=200
     yp_cell[5]=200
     yp_cell[10]=200
-    yp_cell[30]=180
-    yp_cell[50]=100
-    
+    yp_cell[50]=180
+    yp_cell[100]=100
+
     declare -A yp_cell_trail
     yp_cell_trail[0.05]=30
     yp_cell_trail[1]=30
@@ -34,8 +38,8 @@ then
     yp_cell_trail[3.5]=40
     yp_cell_trail[5]=40
     yp_cell_trail[10]=40
-    yp_cell_trail[30]=40
     yp_cell_trail[50]=40
+    yp_cell_trail[100]=40
 
     declare -A final_time
     final_time[0.05]=10000
@@ -44,8 +48,8 @@ then
     final_time[3.5]=5000
     final_time[5]=4000
     final_time[10]=3000
-    final_time[30]=2500
     final_time[50]=2500
+    final_time[100]=2500
 
     for i in "${!yp_grading[@]}"
     do
@@ -73,9 +77,9 @@ then
         res=1e-5
         echo "Residual control: $res"        
         
-        runApplication -s ${model}_${yp} blockMesh
+        singularityRun -s ${model}_${yp} blockMesh
 
-        runApplication -s ${model}_${yp} simpleFoam
+        singularityRun -s ${model}_${yp} ddwmSimpleFoam_airfoil
     
         # Change solverInfo.dat to solverInfo.csv
         sed 's/#//g' postProcessing/solverInfo/0/solverInfo.dat > postProcessing/solverInfo/0/solverInfo.csv
@@ -83,26 +87,26 @@ then
         # Change folder name to preserve each case data
         mv postProcessing postProcessing-${model}_${yp}
 
-        UInf=$(foamDictionary -entry internalField 0/U | sed 's/^.*(\s*\([^ ]*\).*/\1/g')
-        nuInf=$(foamDictionary -entry nu constant/transportProperties | sed 's/^.*\s\(.*\);/\1/g')
+        UInf=$(singularity exec $image bash -c "source $bashrc && foamDictionary -entry internalField 0/U | sed 's/^.*(\s*\([^ ]*\).*/\1/g'")
+        nuInf=$(singularity exec $image bash -c "source $bashrc && foamDictionary -entry nu constant/transportProperties | sed 's/^.*\s\(.*\);/\1/g'")
 
-        timeDir=$(foamListTimes -latestTime)
+        timeDir=$(singularity exec $image bash -c "source $bashrc && foamListTimes -latestTime")
 
         echo "UInf = $UInf"
 
-        foamDictionary -entry boundaryField.airfoil.value -value $timeDir/Cx | \
-            sed -n '/(/,/)/p' | sed -e 's/[()]//g;/^\s*$/d' > Cx.$$
-        foamDictionary -entry boundaryField.airfoil.value -value $timeDir/Cy | \
-            sed -n '/(/,/)/p' | sed -e 's/[()]//g;/^\s*$/d' > Cy.$$
+        singularity exec $image bash -c "source $bashrc && foamDictionary -entry boundaryField.airfoil.value -value $timeDir/Cx | \
+            sed -n '/(/,/)/p' | sed -e 's/[()]//g;/^\s*$/d' > Cx.$$"
+        singularity exec $image bash -c "source $bashrc && foamDictionary -entry boundaryField.airfoil.value -value $timeDir/Cy | \
+            sed -n '/(/,/)/p' | sed -e 's/[()]//g;/^\s*$/d' > Cy.$$"
         # Save wall shear stress (Cf)
-        foamDictionary -entry boundaryField.airfoil.value -value $timeDir/wallShearStress | \
-            sed -n '/(/,/)/p' | sed -e 's/[()]//g;/^\s*$/d' > tau.$$
+        singularity exec $image bash -c "source $bashrc && foamDictionary -entry boundaryField.airfoil.value -value $timeDir/wallShearStress | \
+            sed -n '/(/,/)/p' | sed -e 's/[()]//g;/^\s*$/d' > tau.$$"
         # Save yPlus
-        foamDictionary -entry boundaryField.airfoil.value -value $timeDir/yPlus | \
-            sed -n '/(/,/)/p' | sed -e 's/[()]//g;/^\s*$/d' > yp.$$
+        singularity exec $image bash -c "source $bashrc && foamDictionary -entry boundaryField.airfoil.value -value $timeDir/yPlus | \
+            sed -n '/(/,/)/p' | sed -e 's/[()]//g;/^\s*$/d' > yp.$$"
         # Save pressure coefficient (Cp)
-        foamDictionary -entry boundaryField.airfoil.value -value $timeDir/'total(p)_coeff' | \
-            sed -n '/(/,/)/p' | sed -e 's/[()]//g;/^\s*$/d' > Cp.$$
+        singularity exec $image bash -c "source $bashrc && foamDictionary -entry boundaryField.airfoil.value -value $timeDir/'total(p)_coeff' | \
+            sed -n '/(/,/)/p' | sed -e 's/[()]//g;/^\s*$/d' > Cp.$$"
     
         # Save to csv file instead of dat file (and delete '#' in front of ccx)
         echo "ccx ccy tau_xx tau_yy tau_zz" > yplus_${yp}/tauw_${model}_${yp}.csv
