@@ -1,13 +1,36 @@
 # Design and implementation of a data-driven wall function for the velocity in RANS simulations
 
 ## Introduction
+A wall function is used to reduce computational cost by employing an analytical profile. However, this approach still yields mesh-dependent results for coarser meshes. The mesh-dependency comes from the difference between the analytical profile and the numerical profile from a simulation as shown in the video.
+
+The red-dotted lines at the wall and at the first cell face are the actual velocity gradient (slope), and the orange line is the numerical velocity gradient. It is obvious that the slopes are different for coarser meshes. In addition, the actual velocity value (blue graph) and the numerical velocity value (orange graph) at the first cell face are also different for coarser meshes. The wall function approach somehow corrects this discrepancy at the wall, but it does not deal with the difference at the first cell face. Therefore, one of the objectives of this project is to mitigate the discrepancies at the wall as well as the first cell face by correcting the diffusive and the convective fluxes in the momentum equation. Another objective is to create ML models instead of the analytical profile to predict actual values.
 
 ## Dependencies
+- [SingularityCE](https://sylabs.io/guides/3.8/user-guide/index.html) 3.8.4
+- OpenFOAM-v2106
+- PyTorch 1.9.0 (only CPU)
+- Jupyter-lab 3.2.1
+- Numpy 1.21.3
+- Pandas 1.3.4
+- Matplotlib 3.1.2
+- [Flowtorch](https://github.com/FlowModelingControl/flowtorch) 1.0
 
 ## Getting started
 Compiling the data-driven wall function and running the test cases requires an installation of [OpenFOAM-v2106](https://openfoam.com/). Other releases might work as well but have not been tested.
 
-The singularity container should be located in the top folder of this project (*of2106.sif*).
+To build the image at a local system, a docker container should be downloaded as follows.
+```
+git clone https://github.com/AndreWeiner/of_pytorch_docker.git
+cd of_pytorch_docker
+docker build -t user_name/of_pytorch:of2106-py1.9.0-cpu -f Dockerfile .
+```
+Afterward, this docker image can be converted to a singularity image as follows.
+```
+sudo singularity build of2106-py1.9.0-cpu.sif Singularity.def
+```
+After the creation of the singularity image, it should be moved to the top folder of this project. If the name of the image is not *of2106.sif*, please revise the name to *of2106.sif*, and then the below instructions can be executed.
+
+The more detailed instruction for this version is available in [this link](https://github.com/AndreWeiner/of_pytorch_docker/tree/6c0f9b9f2077015240bb236c426e4884eb8c500e) written by Dr.-Ing. Andre Weiner. If the latest version is needed, please refer to [this](https://github.com/AndreWeiner/of_pytorch_docker) repository.
 
 ## Data generation phase
 ### 1D channel
@@ -151,10 +174,40 @@ cd run/airFoil2D_Re3e6_alpha0_datadriven
 5. The folders *normalized1DModel* and *scaleModule* made from the ML training phase are already included in the test case as well.
 
 ## Notebooks
+### Used in the thesis
+- **BestMapping_1DChannel.ipynb** : Creation of the ML models that used in the thesis.
+- **Mapping_1DChannel.ipynb** : Checking uncertainties of each hyper-parameter to find the best setting of hyper-parameters.
+- **MeshEffect_Spalding.ipynb** : Showing the effect of coarser meshes based on Spalding's function (the notebook for explaining mesh-dependency).
+- **PlotCf_2DflatPlate.ipynb** : Plot skin friction for the flat plate case at Re = 1e7.
+- **PlotCf_2DflatPlate_Re3e6.ipynb** : Plot skin friction for the flat plate case at Re = 3e6.
+- **PlotCf_2DflatPlate_Re6e6.ipynb** : Plot skin friction for the flat plate case at Re = 6e6.
+- **PlotCf_Cp_2Dairfoil.ipynb** : Plot skin friction and pressure coefficient for the airfoil case at Re = 3e6.
+- **PlotCf_bestBlendingExponent_2DflatPlate.ipynb** : Finding proper blending exponents *gammaWall* and *gammaFace* for diffusive fluxes.
+- **FieldAnalysis_avgNuEff.ipynb** : Field analysis for average effective viscosity over iteration steps and along the plate for y+ = 0.05, 10, and 100.
+
+### Others
+- **BestMapping_distanceBasedModel_1D.ipynb** : Creation of the ML models for distance based wall model that is similar to the standard wall function.
+- **FieldAnalysis_1stFace.ipynb** : Field analysis over iteration steps such as nuEff and face slopes to find the reason of divergence before the reverse blending is employed for the 1st cell face correction.
+- **PlotCf_distanceBasedModel_2DflatPlate.ipynb** : Plot skin friction for the flat plate case at Re = 1e7 with respect to the distance based wall model.
+- **PlotResiduals_2Dairfoil.ipynb** : Plot residuals to initially check convergence status for the airfoil case at Re = 3e6.
+- **PlotResiduals_2DflatPlate.ipynb** : Plot residuals to initially check convergence status for the flat plate case at Re = 1e7.
+- **Plots_monotonicVelLimit.ipynb** : Plot for monotonic velocity limitation setting before the reverse blending is employed for the 1st cell face correction.
 
 ## Solvers
+### Used in the thesis
+- **datadriven_wmSimpleFoam** : The modified solver from *simpleFoam* for the flat plate cases by employing the trained ML models.
+- **ddwmSimpleFoam_airfoil** : The modified solver from *simpleFoam* for the airfoil case by employing the trained ML models.
+
+### Other
+- **ddwmSimpleFoam_wallCorr** : The distance-based modified solver for the flat plate cases.
 
 ## Utilities
+### Used in the thesis
+- **extractData** : Data extraction utility for the 1D channel flow.
+
+### Others
+- **extractData_2D** : Data extraction utility for the 2D flat plate case to compare 1st face slopes between the 1D channel and the 2D flat plate with resolved mesh.
+- **extractData_cellCenterVel** : Data extraction utility for the 1D channel flow with respect to the distance-based model.
 
 ## Thesis
 The thesis for the project : 
