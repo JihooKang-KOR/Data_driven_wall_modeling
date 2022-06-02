@@ -3,6 +3,8 @@
 ## Introduction
 A wall function is used to reduce computational cost by employing an analytical profile. However, this approach still yields mesh-dependent results for coarser meshes. The mesh-dependency comes from the difference between the analytical profile and the numerical profile from a simulation as shown in the video.
 
+https://user-images.githubusercontent.com/75588742/171523345-4af2987f-614b-4f28-9b11-27fb3937cc4b.mp4
+
 The red-dotted lines at the wall and at the first cell face are the actual velocity gradient (slope), and the orange line is the numerical velocity gradient. It is obvious that the slopes are different for coarser meshes. In addition, the actual velocity value (blue graph) and the numerical velocity value (orange graph) at the first cell face are also different for coarser meshes. The wall function approach somehow corrects this discrepancy at the wall, but it does not deal with the difference at the first cell face. Therefore, one of the objectives of this project is to mitigate the discrepancies at the wall as well as the first cell face by correcting the diffusive and the convective fluxes in the momentum equation. Another objective is to create ML models instead of the analytical profile to predict actual values.
 
 ## Dependencies
