@@ -1,3 +1,6 @@
+// This header file is created by referring to 
+// https://github.com/AndreWeiner/phd_openfoam/blob/master/solvers/sgsSpeciesFoam/findCellFaceIDs.H
+
 // Required geometrical information
 label surfaceID(0);
 forAll (mesh.boundary(), patchI)
